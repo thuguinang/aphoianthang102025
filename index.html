@@ -1,627 +1,126 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Báo cáo Infographic - Ấp Hội An (T10-11/2025)</title>
-    <!-- Tải Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Tải Font Awesome (cho icon) -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <!-- Tải Tone.js (cho âm thanh) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.min.js"></script>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Gemiflix — Xem phim tĩnh (Static)</title>
+    <meta name="description" content="Gemiflix - Website xem phim tĩnh, giao diện Netflix-like, phát video nhúng từ bên thứ ba." />
 
-    <!-- Tải Font bằng Link thay vì @import -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap"
+      rel="stylesheet"
+    />
 
-    <style>
-        /* Tùy chỉnh font chữ Inter */
-        body {
-            font-family: 'Inter', sans-serif;
-            /* Chống delay 300ms click trên một số trình duyệt mobile cũ */
-            touch-action: manipulation;
-        }
-        
-        /* CSS cho hiệu ứng modal (Giữ lại từ V9) */
-        .modal {
-            transition: opacity 0.25s ease;
-        }
-        .modal-content {
-            /* Bỏ transition transform, để animation 'pop' xử lý */
-            transition: opacity 0.25s ease;
-        }
-        
-        /* --- DÁN CSS MỚI TỪ SẾP --- */
+    <!-- Styles -->
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <!-- data-page để script.js biết đang ở trang nào -->
+  <body data-page="index">
+    <!-- Navbar -->
+    <header class="navbar" role="banner" aria-label="Thanh điều hướng">
+      <div class="container nav-inner">
+        <a class="brand" href="index.html" aria-label="Trang chủ Gemiflix">
+          <span class="brand__logo" aria-hidden="true">▶</span> Gemiflix
+        </a>
 
-        /* --- Cuộn mượt trên mobile & tránh khóa cuộn --- */
-        html, body { min-height:100%; height: auto; overflow-y:auto; -webkit-overflow-scrolling:touch; }
-        body { -webkit-tap-highlight-color: transparent; }
-        
-        /* --- Card: ripple + shine + active --- */
-        .info-card { 
-          position: relative; 
-          overflow: hidden;                 /* để ripple không tràn */
-          will-change: transform, box-shadow;
-          touch-action: manipulation;       /* chỉ áp dụng trên nút bấm, không đặt ở body */
-          transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out; /* Giữ lại transition gốc */
-        }
-        .info-card:active { transform: scale(0.985); }
+        <!-- Ô tìm kiếm đơn giản (tùy chọn dùng) -->
+        <form class="search" role="search" aria-label="Tìm phim" onsubmit="return false;">
+          <input id="search-input" type="search" placeholder="Tìm phim..." aria-label="Tìm kiếm theo tên phim" />
+        </form>
+      </div>
+    </header>
 
-        /* “shine” lướt qua bề mặt khi hover/chạm */
-        .info-card::before {
-          content:"";
-          position:absolute; inset:-150% -80%;
-          background: linear-gradient(130deg, rgba(255,255,255,0) 45%, rgba(255,255,255,0.35) 50%, rgba(255,255,255,0) 55%);
-          transform: translate3d(-30%, -30%, 0) rotate(15deg);
-          transition: transform .6s ease;
-          pointer-events:none;
-        }
-        .info-card:hover::before, .info-card:active::before {
-          transform: translate3d(0,0,0) rotate(15deg);
-        }
+    <!-- Vùng quảng cáo banner (thay bằng hình/HTML của bạn) -->
+    <section class="ad ad--banner container" aria-label="Khu vực quảng cáo 728x90">
+      <!-- Ví dụ thay bằng <a href="#"><img src="LINK-ANH-728x90" alt="Quảng cáo"></a> -->
+      <div class="ad__placeholder">KHU VỰC QUẢNG CÁO 728×90</div>
+    </section>
 
-        /* Ripple click */
-        .ripple {
-          position:absolute; left:var(--ripple-x); top:var(--ripple-y);
-          width:12px;height:12px; border-radius:50%;
-          transform: translate(-50%,-50%) scale(1);
-          pointer-events:none;
-          background: radial-gradient(circle, rgba(255,255,255,.7) 0%, rgba(255,255,255,.25) 40%, rgba(255,255,255,0) 70%);
-          animation: ripple 600ms ease-out forwards;
-        }
-        @keyframes ripple {
-          to { opacity:0; transform: translate(-50%,-50%) scale(24); }
-        }
+    <!-- Hero banner: script.js sẽ tự đổ nội dung từ phim "featured" -->
+    <section id="hero" class="hero container" aria-label="Phim nổi bật">
+      <!-- Nội dung sẽ được render tự động -->
+      <div class="hero__loading">Đang tải phim nổi bật…</div>
+    </section>
 
-        /* Icon “thở” nhẹ cho sinh động */
-        .icon-breath { animation: breath 3s ease-in-out infinite; transform-origin:center; }
-        @keyframes breath { 0%,100%{ transform:translateY(0) scale(1);} 50%{ transform:translateY(-2px) scale(1.03);} }
-        
-        /* Scroll reveal (xuất hiện từ dưới lên) */
-        .pre-reveal { opacity:0; transform: translateY(12px) scale(.98); }
-        .reveal { animation: reveal .5s cubic-bezier(.2,.8,.2,1) forwards; }
-        @keyframes reveal { to { opacity:1; transform: translateY(0) scale(1); } }
-        
-        /* Modal pop (spring) khi mở */
-        .modal.is-open .modal-content { animation: pop .28s cubic-bezier(.2,.8,.2,1) both; }
-        @keyframes pop { 0%{ transform:scale(.93);} 60%{ transform:scale(1.02);} 100%{ transform:scale(1);} }
-        
-        /* Tôn trọng người dùng ghét chuyển động */
-        @media (prefers-reduced-motion: reduce) {
-          * { animation: none !important; transition: none !important; }
-        }
-
-    </style>
-</head>
-<body class="bg-gray-100 p-4 md:p-8">
-
-    <div class="max-w-6xl mx-auto">
-        <!-- Tiêu đề -->
-        <header class="text-center mb-8">
-            <h1 class="text-2xl md:text-4xl font-bold text-blue-800">Báo cáo tóm tắt - Ấp Hội An</h1>
-            <p class="text-lg text-gray-600">Tháng 10 & Chương trình công tác Tháng 11/2025</p>
-        </header>
-
-        <!-- (MỚI) Minh hoạ nền: sóng SVG -->
-        <div aria-hidden="true" class="relative -mt-2 mb-6">
-          <svg viewBox="0 0 1200 120" preserveAspectRatio="none" class="w-full h-10 md:h-16">
-            <defs>
-              <linearGradient id="g" x1="0" x2="1">
-                <stop offset="0%" stop-color="#3b82f6" stop-opacity=".25"/>
-                <stop offset="100%" stop-color="#06b6d4" stop-opacity=".25"/>
-              </linearGradient>
-            </defs>
-            <path d="M0,80 C300,150 900,10 1200,80 L1200,120 L0,120 Z" fill="url(#g)"/>
-          </svg>
+    <!-- Các kệ phim (shelf) định nghĩa sẵn — script.js tự đổ poster vào .movie-list -->
+    <main class="container" id="shelves" role="main">
+      <!-- Bạn có thể thay đổi tiêu đề h2; dữ liệu dựa vào data-category -->
+      <section id="shelf-hanh-dong" class="shelf" data-category="hanh-dong">
+        <div class="shelf__header">
+          <h2>Phim Hành Động</h2>
+          <div class="shelf__controls" aria-label="Điều khiển cuộn">
+            <button class="btn btn--ghost prev" aria-label="Cuộn trái">◀</button>
+            <button class="btn btn--ghost next" aria-label="Cuộn phải">▶</button>
+          </div>
         </div>
+        <div class="movie-list" role="list"></div>
+      </section>
 
-        <!-- Lưới các mục tương tác -->
-        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-            
-            <!-- Card: Xây dựng Đảng -->
-            <div class="info-card bg-white p-4 rounded-xl shadow-lg cursor-pointer" 
-                 data-title="1. Công tác Xây dựng Đảng"
-                 data-details="
-                    <div class='space-y-4'>
-                        <div class='grid grid-cols-2 gap-4 text-center'>
-                            <div class='bg-red-100 p-3 rounded-lg'>
-                                <div class='text-3xl font-bold text-red-700'>02</div>
-                                <div class='text-sm text-red-600'>Cuộc họp Chi ủy</div>
-                            </div>
-                            <div class='bg-red-100 p-3 rounded-lg'>
-                                <div class='text-3xl font-bold text-red-700'>03</div>
-                                <div class='text-sm text-red-600'>Cá nhân khen thưởng</div>
-                            </div>
-                        </div>
-                        <div class='space-y-2 pt-2'>
-                            <div class='flex items-center bg-gray-100 p-3 rounded-lg'>
-                                <i class='fa-solid fa-users-viewfinder text-xl text-red-600 w-6 text-center mr-3'></i>
-                                <span class='text-sm text-gray-700'>Tham dự đầy đủ các Hội nghị Tỉnh ủy.</span>
-                            </div>
-                            <div class='flex items-center bg-gray-100 p-3 rounded-lg'>
-                                <i class='fa-solid fa-user-plus text-xl text-red-600 w-6 text-center mr-3'></i>
-                                <span class='text-sm text-gray-700'>Tiếp tục rà soát quần chúng ưu tú giới thiệu Đảng.</span>
-                            </div>
-                            <div class='flex items-center bg-gray-100 p-3 rounded-lg'>
-                                <i class='fa-solid fa-gavel text-xl text-red-600 w-6 text-center mr-3'></i>
-                                <span class='text-sm text-gray-700'>Chỉ đạo thực hiện nghiêm Quy định 37-QĐ/BCHTW.</span>
-                            </div>
-                        </div>
-                    </div>">
-                <div class="flex flex-col items-center text-center">
-                    <i class="fa-solid fa-landmark text-4xl text-red-600 mb-3"></i>
-                    <h2 class="font-semibold text-gray-800">Xây dựng Đảng</h2>
-                    <p class="text-sm text-gray-500">Họp, khen thưởng...</p>
-                </div>
-            </div>
-
-            <!-- Card: Kinh Tế -->
-            <div class="info-card bg-white p-4 rounded-xl shadow-lg cursor-pointer" 
-                 data-title="2. Phát triển Kinh tế"
-                 data-details="
-                    <div class='space-y-4'>
-                        <h4 class='font-semibold text-gray-800'>Nông nghiệp (Tổng 299 ha)</h4>
-                        <div>
-                            <div class='flex justify-between text-sm font-medium text-green-700 mb-1'>
-                                <span>Xoài (62,33 ha)</span>
-                                <span>21%</span>
-                            </div>
-                            <div class='w-full bg-gray-200 rounded-full h-2.5'>
-                                <div class='bg-green-600 h-2.5 rounded-full' style='width: 21%'></div>
-                            </div>
-                        </div>
-                        <div>
-                            <div class='flex justify-between text-sm font-medium text-yellow-700 mb-1'>
-                                <span>Dừa (46,5 ha)</span>
-                                <span>16%</span>
-                            </div>
-                            <div class='w-full bg-gray-200 rounded-full h-2.5'>
-                                <div class='bg-yellow-500 h-2.5 rounded-full' style='width: 16%'></div>
-                            </div>
-                        </div>
-                        <div class='grid grid-cols-2 gap-4 text-center'>
-                            <div class='bg-green-100 p-3 rounded-lg'>
-                                <div class='text-3xl font-bold text-green-700'>90</div>
-                                <div class='text-sm text-green-600'>Tấn thu hoạch</div>
-                            </div>
-                             <div class='bg-blue-100 p-3 rounded-lg'>
-                                <div class='text-3xl font-bold text-blue-700'>76</div>
-                                <div class='text-sm text-blue-600'>Điểm dịch vụ</div>
-                            </div>
-                        </div>
-                        <h4 class='font-semibold text-gray-800 pt-2'>Chăn nuôi</h4>
-                        <div class='grid grid-cols-3 gap-2 text-center'>
-                             <div class='bg-gray-100 p-2 rounded'>
-                                <div class='text-xl font-bold text-gray-700'>105</div>
-                                <div class='text-xs text-gray-600'>Con Bò</div>
-                            </div>
-                             <div class='bg-gray-100 p-2 rounded'>
-                                <div class='text-xl font-bold text-gray-700'>150</div>
-                                <div class='text-xs text-gray-600'>Con Dê</div>
-                            </div>
-                             <div class='bg-gray-100 p-2 rounded'>
-                                <div class='text-xl font-bold text-gray-700'>1.850</div>
-                                <div class='text-xs text-gray-600'>Con Thỏ</div>
-                            </div>
-                        </div>
-                    </div>">
-                <div class="flex flex-col items-center text-center">
-                    <i class="fa-solid fa-seedling text-4xl text-green-600 mb-3"></i>
-                    <h2 class="font-semibold text-gray-800">Kinh Tế</h2>
-                    <p class="text-sm text-gray-500">Nông nghiệp, Dịch vụ...</p>
-                </div>
-            </div>
-
-            <!-- Card: Hạ tầng & Môi trường -->
-            <div class="info-card bg-white p-4 rounded-xl shadow-lg cursor-pointer" 
-                 data-title="3. Hạ tầng & Môi trường"
-                 data-details="
-                    <div class='space-y-4'>
-                        <div class='bg-red-100 border-l-4 border-red-500 text-red-700 p-3 rounded-r-lg'>
-                            <h4 class='font-bold'>Lưu ý thi công</h4>
-                            <p class='text-sm'>Tỉnh lộ 915 làm vỡ đê, ảnh hưởng tài sản, vườn cây của dân.</p>
-                        </div>
-                        <h4 class='font-semibold text-gray-800'>Nước sạch (615 / 877 tổ)</h4>
-                        <div>
-                            <div class='flex justify-between text-sm font-medium text-blue-700 mb-1'>
-                                <span>Tỷ lệ đạt</span>
-                                <span>70%</span>
-                            </div>
-                            <div class='w-full bg-gray-200 rounded-full h-2.5'>
-                                <div class='bg-blue-600 h-2.5 rounded-full' style='width: 70%'></div>
-                            </div>
-                        </div>
-                        <div class='grid grid-cols-2 gap-4 text-center'>
-                            <div class='bg-yellow-100 p-3 rounded-lg'>
-                                <div class='text-2xl font-bold text-yellow-800'>03</div>
-                                <div class='text-sm text-yellow-700'>Công trình đang thi công</div>
-                            </div>
-                            <div class='bg-green-100 p-3 rounded-lg'>
-                                <div class='text-2xl font-bold text-green-800'>6,35Tr</div>
-                                <div class='text-sm text-green-700'>Thu thuế phi nông nghiệp</div>
-                            </div>
-                        </div>
-                         <div class='flex items-center bg-gray-100 p-3 rounded-lg'>
-                            <i class='fa-solid fa-broom text-2xl text-gray-600 mr-3'></i>
-                            <div>
-                                <div class='font-semibold text-gray-800'>Ra quân vệ sinh</div>
-                                <div class='text-sm text-gray-600'>01 cuộc / 12 lượt tham gia</div>
-                            </div>
-                        </div>
-                    </div>">
-                <div class="flex flex-col items-center text-center">
-                    <i class="fa-solid fa-road text-4xl text-yellow-600 mb-3"></i>
-                    <h2 class="font-semibold text-gray-800">Hạ tầng & Môi trường</h2>
-                    <p class="text-sm text-gray-500">Giao thông, Nước sạch...</p>
-                </div>
-            </div>
-
-            <!-- Card: Văn hóa Xã hội -->
-            <div class="info-card bg-white p-4 rounded-xl shadow-lg cursor-pointer" 
-                 data-title="4. Văn hóa - Xã hội"
-                 data-details="
-                    <div class='space-y-4'>
-                        <div class='flex items-center bg-teal-50 p-3 rounded-lg'>
-                            <i class='fa-solid fa-gift text-3xl text-teal-600 mr-4'></i>
-                            <div>
-                                <div class='font-semibold text-teal-800'>Thăm hỏi gia đình chính sách</div>
-                                <div class='text-sm text-teal-700'>Thực hiện thường xuyên</div>
-                            </div>
-                        </div>
-                        <div class='grid grid-cols-2 gap-4 text-center'>
-                            <div class='bg-teal-100 p-3 rounded-lg'>
-                                <div class='text-3xl font-bold text-teal-700'>04</div>
-                                <div class='text-sm text-teal-600'>Cụm loa đề xuất</div>
-                            </div>
-                            <div class='bg-teal-100 p-3 rounded-lg'>
-                                <div class='text-3xl font-bold text-teal-700'>08</div>
-                                <div class='text-sm text-teal-600'>Tiêu chí NTM</div>
-                            </div>
-                        </div>
-                        <div class='flex items-center bg-gray-100 p-3 rounded-lg'>
-                            <i class='fa-solid fa-peace text-2xl text-gray-600 mr-3'></i>
-                            <div>
-                                <div class='font-semibold text-gray-800'>Tôn giáo</div>
-                                <div class='text-sm text-gray-600'>01 tín ngưỡng dân gian, hoạt động đúng quy định.</div>
-                            </div>
-                        </div>
-                    </div>">
-                <div class="flex flex-col items-center text-center">
-                    <i class="fa-solid fa-users text-4xl text-teal-600 mb-3"></i>
-                    <h2 class="font-semibold text-gray-800">Văn hóa - Xã hội</h2>
-                    <p class="text-sm text-gray-500">Chính sách, NTM...</p>
-                </div>
-            </div>
-
-            <!-- Card: An ninh Quốc phòng -->
-            <div class="info-card bg-white p-4 rounded-xl shadow-lg cursor-pointer" 
-                 data-title="5. An ninh - Quốc phòng"
-                 data-details="
-                     <div class='space-y-4'>
-                        <div class='flex items-center bg-blue-50 p-3 rounded-lg'>
-                            <i class='fa-solid fa-shield-virus text-3xl text-blue-600 mr-4'></i>
-                            <div>
-                                <div class='font-semibold text-blue-800'>Tình hình an ninh trật tự</div>
-                                <div class='text-sm text-blue-700'>Được giữ vững.</div>
-                            </div>
-                        </div>
-                        <div class='grid grid-cols-2 gap-4 text-center'>
-                            <div class='bg-blue-100 p-3 rounded-lg'>
-                                <div class='text-3xl font-bold text-blue-700'>01</div>
-                                <div class='text-sm text-blue-600'>Vụ trộm (phát hiện)</div>
-                            </div>
-                            <div class='bg-green-100 p-3 rounded-lg'>
-                                <div class='text-3xl font-bold text-green-700'>02</div>
-                                <div class='text-sm text-green-600'>Đơn tranh chấp (đã hòa giải)</div>
-                            </div>
-                        </div>
-                        <div class='space-y-2 pt-2'>
-                            <div class='flex items-center bg-gray-100 p-3 rounded-lg'>
-                                <i class='fa-solid fa-bolt text-xl text-blue-600 w-6 text-center mr-3'></i>
-                                <span class='text-sm text-gray-700'>Tịch thu 01 bộ công cụ kích điện.</span>
-                            </div>
-                            <div class='flex items-center bg-gray-100 p-3 rounded-lg'>
-                                <i class='fa-solid fa-people-military text-xl text-blue-600 w-6 text-center mr-3'></i>
-                                <span class='text-sm text-gray-700'>Tổ chức họp bình nghị NVQS 2026.</span>
-                            </div>
-                        </div>
-                    </div>">
-                <div class="flex flex-col items-center text-center">
-                    <i class="fa-solid fa-shield-halved text-4xl text-blue-700 mb-3"></i>
-                    <h2 class="font-semibold text-gray-800">An ninh - Quốc phòng</h2>
-                    <p class="text-sm text-gray-500">Trật tự, NVQS...</p>
-                </div>
-            </div>
-
-            <!-- Card: Mặt trận & Đoàn thể -->
-            <div class="info-card bg-white p-4 rounded-xl shadow-lg cursor-pointer" 
-                 data-title="6. Mặt trận & Đoàn thể"
-                 data-details="
-                    <div class='space-y-4'>
-                        <div class='bg-pink-100 p-4 rounded-lg text-center'>
-                            <div class='text-sm text-pink-600 mb-1'>Vận động ủng hộ bão miền Trung</div>
-                            <div class='text-4xl font-bold text-pink-700'>1.280.000đ</div>
-                        </div>
-                         <div class='flex items-center bg-gray-100 p-3 rounded-lg'>
-                            <i class='fa-solid fa-comments text-2xl text-gray-600 mr-3'></i>
-                            <div>
-                                <div class='font-semibold text-gray-800'>Tiếp công dân</div>
-                                <div class='text-sm text-gray-600'>01 ngày (Đại biểu HĐND)</div>
-                            </div>
-                        </div>
-                        <div class='flex items-center bg-gray-100 p-3 rounded-lg'>
-                            <i class='fa-solid fa-sitemap text-xl text-pink-600 w-6 text-center mr-3'></i>
-                            <span class='text-sm text-gray-700'>Các đoàn thể (Thanh niên, Nông dân, Phụ nữ) hoạt động, dự Đại hội cấp trên.</span>
-                        </div>
-                    </div>">
-                <div class="flex flex-col items-center text-center">
-                    <i class="fa-solid fa-hand-holding-heart text-4xl text-pink-600 mb-3"></i>
-                    <h2 class="font-semibold text-gray-800">Mặt trận & Đoàn thể</h2>
-                    <p class="text-sm text-gray-500">Vận động, Quyên góp...</p>
-                </div>
-            </div>
-            
-            <!-- Card: Tồn tại -->
-            <div class="info-card bg-white p-4 rounded-xl shadow-lg cursor-pointer" 
-                 data-title="7. Tồn tại, Hạn chế"
-                 data-details="
-                    <div class='space-y-4'>
-                        <div class='bg-orange-100 border-l-4 border-orange-500 text-orange-700 p-4 rounded-r-lg'>
-                            <div class='flex'>
-                                <div class='py-1'><i class='fa-solid fa-triangle-exclamation text-2xl mr-3'></i></div>
-                                <div>
-                                    <h4 class='font-bold'>Hạn chế chính</h4>
-                                    <p class='text-sm'>Một số đảng viên trẻ đi làm ăn xa, ảnh hưởng đến hiệu quả hoạt động của Chi bộ.</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>">
-                <div class="flex flex-col items-center text-center">
-                    <i class="fa-solid fa-triangle-exclamation text-4xl text-orange-500 mb-3"></i>
-                    <h2 class="font-semibold text-gray-800">Tồn Tại, Hạn Chế</h2>
-                    <p class="text-sm text-gray-500">Đảng viên đi làm xa...</p>
-                </div>
-            </div>
-
-            <!-- Card: Nhiệm vụ T11 -->
-            <div class="info-card bg-white p-4 rounded-xl shadow-lg cursor-pointer" 
-                 data-title="8. Chương trình công tác T11/2025"
-                 data-details="
-                    <div class='space-y-3'>
-                        <div class='flex items-start text-gray-700'>
-                            <i class='fa-solid fa-check-square text-purple-600 mt-1 mr-2'></i>
-                            <span>Tiếp tục thực hiện Kết luận 01, Chỉ thị 05.</span>
-                        </div>
-                        <div class='flex items-start text-gray-700'>
-                            <i class='fa-solid fa-check-square text-purple-600 mt-1 mr-2'></i>
-                            <span>Tăng cường nắm bắt tình hình tư tưởng đảng viên, đoàn viên.</span>
-                        </div>
-                        <div class='flex items-start text-gray-700'>
-                            <i class='fa-solid fa-check-square text-purple-600 mt-1 mr-2'></i>
-                            <span>Tiếp tục tuyên truyền các văn bản của HĐND.</span>
-                        </div>
-                         <div class='flex items-start text-gray-500'>
-                            <i class='fa-solid fa-ellipsis-h text-gray-500 mt-1 mr-2'></i>
-                            <span>(Và các nhiệm vụ khác...)</span>
-                        </div>
-                    </div>">
-                <div class="flex flex-col items-center text-center">
-                    <i class="fa-solid fa-calendar-check text-4xl text-purple-600 mb-3"></i>
-                    <h2 class="font-semibold text-gray-800">Nhiệm vụ T11/2025</h2>
-                    <p class="text-sm text-gray-500">Chỉ đạo, Tư tưởng...</p>
-                </div>
-            </div>
-
-        </div> <!-- Hết lưới -->
-
-    </div> <!-- Hết container chính -->
-
-    <!-- (MỚI) Modal (Cửa sổ chi tiết) - Thêm 'hidden' -->
-    <div id="infoModal" class="modal fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 opacity-0 pointer-events-none z-50 hidden">
-        <div class="modal-content bg-white rounded-lg shadow-2xl w-full max-w-lg overflow-hidden">
-            <!-- Header Modal -->
-            <div class="flex justify-between items-center p-4 border-b">
-                <h3 id="modalTitle" class="text-xl font-bold text-blue-800">Chi tiết</h3>
-                <button id="closeModal" class="text-gray-500 hover:text-red-600 text-3xl font-light">&times;</button>
-            </div>
-            <!-- Nội dung Modal -->
-            <div id="modalBody" class="p-6 max-h-[75vh] overflow-y-auto">
-                <!-- Nội dung chi tiết sẽ được chèn vào đây -->
-            </div>
+      <section id="shelf-kinh-di" class="shelf" data-category="kinh-di">
+        <div class="shelf__header">
+          <h2>Phim Kinh Dị</h2>
+          <div class="shelf__controls">
+            <button class="btn btn--ghost prev" aria-label="Cuộn trái">◀</button>
+            <button class="btn btn--ghost next" aria-label="Cuộn phải">▶</button>
+          </div>
         </div>
-    </div>
+        <div class="movie-list" role="list"></div>
+      </section>
 
+      <section id="shelf-tinh-cam" class="shelf" data-category="tinh-cam">
+        <div class="shelf__header">
+          <h2>Phim Tình Cảm</h2>
+          <div class="shelf__controls">
+            <button class="btn btn--ghost prev" aria-label="Cuộn trái">◀</button>
+            <button class="btn btn--ghost next" aria-label="Cuộn phải">▶</button>
+          </div>
+        </div>
+        <div class="movie-list" role="list"></div>
+      </section>
 
-    <!-- (MỚI) Dán JS mới thay thế toàn bộ script cũ -->
-    <script>
-      window.addEventListener('load', () => {
-        const cards = document.querySelectorAll('.info-card');
-        const modal = document.getElementById('infoModal');
-        const modalTitle = document.getElementById('modalTitle');
-        const modalBody = document.getElementById('modalBody');
-        const closeModalBtn = document.getElementById('closeModal');
-    
-        /* ============ AUDIO: hoạt động chắc chắn trên Android & Windows ============ */
-        const hasTone = typeof window.Tone !== 'undefined';
-        let audioInitialized = false;
-        let clickSound = null, closeSound = null;
-        let audioCtx = null, gainMaster = null;   // fallback WebAudio
-    
-        async function ensureAudio() {
-          if (audioInitialized) return;
-          try {
-            if (hasTone) {
-              await Tone.start();                         // bắt buộc await để “unlock”
-              const limiter = new Tone.Limiter(-3).toDestination();
-              clickSound = new Tone.Synth({
-                oscillator: { type: 'sine' },
-                envelope: { attack: 0.005, decay: 0.08, sustain: 0.02, release: 0.08 }
-              }).connect(limiter);
-              closeSound = new Tone.Synth({
-                oscillator: { type: 'triangle' },
-                envelope: { attack: 0.005, decay: 0.08, sustain: 0.02, release: 0.08 }
-              }).connect(limiter);
-            } else {
-              audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-              gainMaster = audioCtx.createGain();
-              gainMaster.gain.value = 0.15;
-              gainMaster.connect(audioCtx.destination);
-              if (audioCtx.state === 'suspended') await audioCtx.resume();
-            }
-            audioInitialized = true;
-          } catch (e) {
-            console.warn('Không thể khởi tạo âm thanh:', e);
-          }
-        }
-    
-        function beepFallback(freq = 880, dur = 0.085) {
-          if (!audioCtx || !gainMaster) return;
-          const t0 = audioCtx.currentTime;
-          const o = audioCtx.createOscillator();
-          const g = audioCtx.createGain();
-          o.type = 'sine'; o.frequency.value = freq;
-          g.gain.setValueAtTime(0, t0);
-          g.gain.linearRampToValueAtTime(1, t0 + 0.005);
-          g.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
-          o.connect(g); g.connect(gainMaster);
-          o.start(t0); o.stop(t0 + dur + 0.02);
-        }
-    
-        async function playClick() {
-          await ensureAudio();
-          if (hasTone && clickSound) clickSound.triggerAttackRelease('C6', '8n');
-          else beepFallback(990, 0.08);
-        }
-        async function playClose() {
-          await ensureAudio();
-          if (hasTone && closeSound) closeSound.triggerAttackRelease('A4', '8n');
-          else beepFallback(660, 0.08);
-        }
-    
-        // Unlock audio ngay lần chạm đầu tiên ở bất kỳ đâu
-        const unlock = async () => { await ensureAudio(); document.removeEventListener('pointerdown', unlock); };
-        document.addEventListener('pointerdown', unlock, { once: true });
-        document.addEventListener('visibilitychange', async () => {
-          if (document.visibilityState === 'visible') await ensureAudio();
-        });
-    
-        /* ================== HIỆU ỨNG: ripple, tilt, scroll-reveal ================== */
-        function addRipple(e, el) {
-          const rect = el.getBoundingClientRect();
-          const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
-          const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
-          const r = document.createElement('span');
-          r.className = 'ripple';
-          r.style.setProperty('--ripple-x', x + 'px');
-          r.style.setProperty('--ripple-y', y + 'px');
-          el.appendChild(r);
-          r.addEventListener('animationend', () => r.remove());
-        }
-    
-        // Tilt nhẹ khi rê chuột (desktop)
-        function attachTilt(card) {
-          let touching = false;
-          card.addEventListener('touchstart', () => touching = true, { passive: true });
-          card.addEventListener('touchend', () => touching = false);
-          card.addEventListener('mousemove', (e) => {
-            if (touching) return; // không tilt khi đang touch
-            const rect = card.getBoundingClientRect();
-            const cx = rect.left + rect.width / 2;
-            const cy = rect.top + rect.height / 2;
-            const dx = (e.clientX - cx) / rect.width;   // -0.5..0.5
-            const dy = (e.clientY - cy) / rect.height;
-            const rx = dy * -6;                         // rotateX
-            const ry = dx * 6;                          // rotateY
-            card.style.transform = `perspective(800px) rotateX(${rx}deg) rotateY(${ry}deg) scale(1.01)`;
-          });
-          card.addEventListener('mouseleave', () => {
-            card.style.transform = '';
-          });
-        }
-    
-        // Reveal khi vào viewport
-        const io = new IntersectionObserver((entries) => {
-          entries.forEach(en => {
-            if (en.isIntersecting) {
-              en.target.classList.remove('pre-reveal');
-              en.target.classList.add('reveal');
-              io.unobserve(en.target);
-            }
-          });
-        }, { threshold: 0.12 });
-    
-        // Thêm nhịp thở cho icon & reveal cho card
-        cards.forEach(card => {
-          const icon = card.querySelector('i');
-          if (icon) icon.classList.add('icon-breath');
-    
-          card.classList.add('pre-reveal');
-          io.observe(card);
-    
-          // Tilt & ripple & mở modal + âm thanh
-          attachTilt(card);
-    
-          card.addEventListener('click', async function (e) {
-            addRipple(e, this);
-            await playClick();
-            openModal(this);
-          });
-    
-          // Bàn phím (accessibility)
-          card.setAttribute('role', 'button');
-          card.setAttribute('tabindex', '0');
-          card.addEventListener('keydown', async function (e) {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              await playClick();
-              openModal(this);
-            }
-          });
-        });
-    
-        /* =========================== Modal mở/đóng ================================ */
-        function openModal(cardElement) {
-          const title = cardElement.getAttribute('data-title') || 'Chi tiết';
-          const details = cardElement.getAttribute('data-details') || '';
-          modalTitle.textContent = title;
-          modalBody.innerHTML = details;
-    
-          // Bỏ hidden trước, rồi animate
-          modal.classList.remove('hidden');
-          requestAnimationFrame(() => {
-            modal.classList.add('is-open');
-            modal.classList.remove('opacity-0', 'pointer-events-none');
-          });
-        }
-    
-        async function close() {
-          await playClose();
-          modal.classList.add('opacity-0', 'pointer-events-none');
-          modal.classList.remove('is-open');
+      <section id="shelf-hai-huoc" class="shelf" data-category="hai-huoc">
+        <div class="shelf__header">
+          <h2>Phim Hài Hước</h2>
+          <div class="shelf__controls">
+            <button class="btn btn--ghost prev" aria-label="Cuộn trái">◀</button>
+            <button class="btn btn--ghost next" aria-label="Cuộn phải">▶</button>
+          </div>
+        </div>
+        <div class="movie-list" role="list"></div>
+      </section>
 
-          // (MỚI) Đợi transition xong mới thêm 'hidden'
-          const onEnd = (e) => {
-            if (e.target === modal) {
-              modal.classList.add('hidden');
-              modal.removeEventListener('transitionend', onEnd);
-            }
-          };
-          modal.addEventListener('transitionend', onEnd);
-        }
-    
-        closeModalBtn.addEventListener('click', close);
-        modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
+      <section id="shelf-hoat-hinh" class="shelf" data-category="hoat-hinh">
+        <div class="shelf__header">
+          <h2>Phim Hoạt Hình</h2>
+          <div class="shelf__controls">
+            <button class="btn btn--ghost prev" aria-label="Cuộn trái">◀</button>
+            <button class="btn btn--ghost next" aria-label="Cuộn phải">▶</button>
+          </div>
+        </div>
+        <div class="movie-list" role="list"></div>
+      </section>
 
-        // Thêm phím Escape để đóng
-        window.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && !modal.classList.contains('opacity-0')) {
-                close();
-            }
-        });
+      <!-- Nếu trong database có thêm thể loại mà chưa có section,
+           script.js sẽ tự tạo thêm dưới đây -->
+      <div id="dynamic-shelves"></div>
+    </main>
 
-      });</script>
+    <!-- Quảng cáo giữa trang (thay tùy ý) -->
+    <section class="ad ad--box container" aria-label="Khu vực quảng cáo 300x250">
+      <div class="ad__placeholder">QUẢNG CÁO 300×250</div>
+    </section>
 
-</body>
+    <footer class="footer">
+      <div class="container">
+        <p>© <span id="year"></span> Gemiflix. Nội dung video nhúng từ bên thứ ba (YouTube, Dailymotion…).</p>
+      </div>
+    </footer>
+
+    <!-- Script: data.js phải nằm trước script.js -->
+    <script src="data.js"></script>
+    <script src="script.js"></script>
+  </body>
 </html>
